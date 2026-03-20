@@ -6,51 +6,43 @@
 <title>FitnessGo — Level Up Your Life</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vitalquest.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
-<!-- ══ TOP NAV (hidden during onboarding) ══ -->
+<!-- ══ TOP NAV ══ -->
 <nav class="top-nav" id="top-nav" style="display:none">
-  <div class="game-logo">Fitness<span>Go</span></div>
-  <div class="player-bar" id="player-bar">
-    <div class="avatar-circle" id="nav-avatar">⚔️</div>
-    <div class="player-info">
-      <div class="player-name-row">
-        <span class="player-name" id="nav-name">Hero</span>
-        <span class="level-badge" id="nav-level">LV 1</span>
-      </div>
-      <div class="xp-bar-wrap">
-        <div class="xp-bar"><div class="xp-fill" id="nav-xp-fill" style="width:0%"></div></div>
-        <span class="xp-text" id="nav-xp-text">0 / 100 XP</span>
-      </div>
-    </div>
-  </div>
-  <div class="streak-chip" id="streak-chip">🔥 <span id="streak-count">0</span> Day Streak</div>
   <div class="nav-items">
     <button class="nav-item active" id="ni-hq" onclick="go('hq')"><span class="ni-icon">🏠</span><span class="ni-text">HQ</span></button>
     <button class="nav-item" id="ni-plan" onclick="go('plan')"><span class="ni-icon">📋</span><span class="ni-text">Quests</span></button>
+    <button class="nav-item" id="ni-schedule" onclick="go('schedule')"><span class="ni-icon">📅</span><span class="ni-text">Planner</span></button>
+    <button class="nav-item" id="ni-guild" onclick="go('guild')"><span class="ni-icon">🏛️</span><span class="ni-text">Guild</span></button>
     <button class="nav-item" id="ni-kitchen" onclick="go('kitchen')"><span class="ni-icon">🍳</span><span class="ni-text">Kitchen</span></button>
-    <button class="nav-item" id="ni-sage" onclick="go('sage')"><span class="ni-icon">🧙</span><span class="ni-text">Sage</span></button>
     <button class="nav-item" id="ni-settings" onclick="go('settings')"><span class="ni-icon">⚙️</span><span class="ni-text">Settings</span></button>
+    <button class="nav-item" id="ni-adventure" style="display:none" onclick="go('adventure')"><span class="ni-icon">⚔️</span><span class="ni-text">Adventure</span></button>
   </div>
 </nav>
 
-<!-- ══ BOTTOM NAV (hidden during onboarding, mobile) ══ -->
+<!-- ══ BOTTOM NAV (mobile) ══ -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none">
   <button class="bn-item active" id="bni-hq" onclick="go('hq')"><span class="bn-icon">🏠</span><span class="bn-label">HQ</span></button>
   <button class="bn-item" id="bni-plan" onclick="go('plan')"><span class="bn-icon">📋</span><span class="bn-label">Quests</span></button>
+  <button class="bn-item" id="bni-schedule" onclick="go('schedule')"><span class="bn-icon">📅</span><span class="bn-label">Planner</span></button>
+  <button class="bn-item" id="bni-guild" onclick="go('guild')"><span class="bn-icon">🏛️</span><span class="bn-label">Guild</span></button>
   <button class="bn-item" id="bni-kitchen" onclick="go('kitchen')"><span class="bn-icon">🍳</span><span class="bn-label">Kitchen</span></button>
-  <button class="bn-item" id="bni-sage" onclick="go('sage')"><span class="bn-icon">🧙</span><span class="bn-label">Sage</span></button>
   <button class="bn-item" id="bni-settings" onclick="go('settings')"><span class="bn-icon">⚙️</span><span class="bn-label">Settings</span></button>
+  <button class="bn-item" id="bni-adventure" style="display:none" onclick="go('adventure')"><span class="bn-icon">⚔️</span><span class="bn-label">Adventure</span></button>
 </nav>
 
-<!-- ══════════════ ONBOARDING OVERLAY (new users only) ══════════════ -->
+<!-- ══════════════ ONBOARDING OVERLAY ══════════════ -->
 <div id="screen-quiz" class="screen active" style="position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--bg)">
   <div class="quiz-container">
     <div class="quiz-header">
       <div class="quiz-eyebrow">🎮 FitnessGo · Character Setup</div>
       <h1 class="quiz-title">Create Your <span class="hl">Hero</span></h1>
-      <p class="quiz-sub">Answer 5 questions to build your personalized wellness adventure. Your stats, quests, and rewards will adapt to your character.</p>
+      <p class="quiz-sub">Answer 6 questions to build your personalized wellness adventure. Your stats, quests, and workouts will all adapt to your setup.</p>
     </div>
     <div class="prog-steps">
       <div class="ps active" id="ps0"></div>
@@ -58,6 +50,7 @@
       <div class="ps" id="ps2"></div>
       <div class="ps" id="ps3"></div>
       <div class="ps" id="ps4"></div>
+      <div class="ps" id="ps5"></div>
     </div>
 
     <!-- Step 0: Class / Goal -->
@@ -91,6 +84,10 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Target (kg)</label><input class="form-input" type="number" id="f-target" placeholder="58"></div>
+        <div class="form-group"><label class="form-label">Body Type</label><select class="form-input" id="f-body-type"><option value="">Select...</option><option value="skinny">Skinny</option><option value="skinny_fat">Skinny Fat</option><option value="average">Average</option><option value="athletic">Athletic / Lean</option><option value="overweight">Fat / Overweight</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Physique Phase</label><select class="form-input" id="f-phase"><option value="auto" selected>Auto (recommended)</option><option value="cutting">Cutting</option><option value="lean_bulk">Lean Bulk</option><option value="bulking">Bulk</option><option value="recomp">Recomp / Maintain</option></select></div>
       </div>
       <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(0)">◂ Back</button><button class="btn-forward" onclick="goStep(2)">Next ▸</button></div>
     </div>
@@ -109,9 +106,41 @@
       <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(1)">◂ Back</button><button class="btn-forward" onclick="goStep(3)">Next ▸</button></div>
     </div>
 
-    <!-- Step 3: Diet -->
+    <!-- Step 3: Training Setup (NEW) -->
     <div class="q-step" id="qs3">
-      <div class="q-label">Step 4 — Nutrition Path</div>
+      <div class="q-label">Step 4 — Training Setup</div>
+      <h2 class="q-title">Where do you<br>train?</h2>
+      <p class="q-sub">This unlocks the right workouts for your setup, available time, and current calisthenics level.</p>
+      <div class="choices">
+        <div class="choice" onclick="pick(this,'equipment','full_gym')"><span class="c-icon">🏋️</span><div><div class="c-label">Full Gym</div><div class="c-desc">Barbells, cables, machines</div></div></div>
+        <div class="choice" onclick="pick(this,'equipment','minimal_gym')"><span class="c-icon">🪁</span><div><div class="c-label">Minimal / Hotel Gym</div><div class="c-desc">Dumbbells & basic equipment</div></div></div>
+        <div class="choice" onclick="pick(this,'equipment','home_equipped')"><span class="c-icon">🏠</span><div><div class="c-label">Home (Equipped)</div><div class="c-desc">Bands, dumbbells, pull-up bar</div></div></div>
+        <div class="choice" onclick="pick(this,'equipment','calisthenics')"><span class="c-icon">🤸</span><div><div class="c-label">Calisthenics / Bodyweight</div><div class="c-desc">No equipment needed</div></div></div>
+        <div class="choice" onclick="pick(this,'equipment','outdoor')"><span class="c-icon">🌳</span><div><div class="c-label">Outdoor / Parks</div><div class="c-desc">Running tracks, park bars</div></div></div>
+      </div>
+      <div id="find-gym-prompt" class="find-gym-prompt" style="display:none">
+        <div class="find-gym-copy">🏛️ Want to find gyms near you? We can search for your nearest guild after setup.</div>
+        <button onclick="go('guild')" class="find-gym-btn">Find nearby gyms →</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Calisthenics Experience</label><select class="form-input" id="f-calisthenics-level"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
+        <div class="form-group"><label class="form-label">Training Time</label><select class="form-input" id="f-session-minutes"><option value="20">20 min</option><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">60 min</option><option value="75">75 min</option><option value="90">90 min</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Preferred Training Window</label><select class="form-input" id="f-training-window"><option value="early">Early Bird</option><option value="midday">Midday</option><option value="evening" selected>Evening</option><option value="night">Night</option><option value="flexible">Flexible</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="f-auto-window"> Hidden Beta: Auto-pick training window from Planner schedule</label>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;line-height:1.5">If enabled, your plan uses the best available free slot from your uploaded schedule.</div>
+        </div>
+      </div>
+      <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(2)">◂ Back</button><button class="btn-forward" onclick="goStep(4)">Next ▸</button></div>
+    </div>
+
+    <!-- Step 4: Diet -->
+    <div class="q-step" id="qs4">
+      <div class="q-label">Step 5 — Nutrition Path</div>
       <h2 class="q-title">Choose your<br>diet path</h2>
       <p class="q-sub">Unlocks specific meal quests and kitchen recipes.</p>
       <div class="choices">
@@ -122,19 +151,42 @@
         <div class="choice" onclick="pick(this,'diet','halal')"><span class="c-icon">🌙</span><div><div class="c-label">Moon Path</div></div></div>
         <div class="choice" onclick="pick(this,'diet','gluten_free')"><span class="c-icon">🌾</span><div><div class="c-label">Pure Grain</div></div></div>
       </div>
-      <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(2)">◂ Back</button><button class="btn-forward" onclick="goStep(4)">Next ▸</button></div>
+      <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(3)">◂ Back</button><button class="btn-forward" onclick="goStep(5)">Next ▸</button></div>
     </div>
 
-    <!-- Step 4: Name -->
-    <div class="q-step" id="qs4">
-      <div class="q-label">Step 5 — Name Your Hero</div>
+    <!-- Step 5: Name -->
+    <div class="q-step" id="qs5">
+      <div class="q-label">Step 6 — Name Your Hero</div>
       <h2 class="q-title">Almost ready<br>to begin!</h2>
       <p class="q-sub">Your adventure is about to start.</p>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Hero Name</label><input class="form-input" type="text" id="f-name" placeholder="e.g. Alex"></div>
         <div class="form-group"><label class="form-label">Training Days / Week</label><select class="form-input" id="f-days"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></div>
       </div>
-      <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(3)">◂ Back</button><button class="btn-forward" onclick="createHero()">⚔️ Begin Quest</button></div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group"><label class="form-label">Country (for holidays)</label><select class="form-input" id="f-country"></select></div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label class="form-label">Pattern Mode</label>
+          <select class="form-input" id="f-pattern-mode">
+            <option value="flexible" selected>Soft (recommended)</option>
+            <option value="strict">Hard (strict routine)</option>
+          </select>
+          <div style="font-size:0.72rem;color:var(--muted2);margin-top:6px;line-height:1.5">Soft prioritizes time-efficient slots and adapts when days are busy. Hard follows a stricter cadence and keeps workout times more consistent across sessions.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Muscle Split</label>
+          <select class="form-input" id="f-build-muscle-split">
+            <option value="classic" selected>Classic 5-Day (Chest/Back/Legs/Shoulders/Arms)</option>
+            <option value="ppl">Push Pull Legs (PPL)</option>
+            <option value="upper_lower">Upper Lower</option>
+            <option value="arnold">Arnold Split</option>
+          </select>
+          <div style="font-size:0.72rem;color:var(--muted2);margin-top:6px;line-height:1.5">Used most when your goal is Build Muscle. Other goals still use goal-specific daily themes.</div>
+        </div>
+      </div>
+      <div class="q-nav"><button class="btn-back-quiz" onclick="goStep(4)">◂ Back</button><button class="btn-forward" onclick="createHero()">⚔️ Begin Quest</button></div>
     </div>
   </div>
 </div>
@@ -145,50 +197,47 @@
     <div class="hq-hero-top">
       <div class="hq-char">
         <div class="hq-char-title">Active Hero</div>
-        <div class="hq-char-name" id="hq-name">Hero</div>
-        <div class="hq-char-class" id="hq-class">Adventurer · Level 1</div>
+        <div class="hq-profile-card">
+          <div class="hq-profile-avatar" id="hq-avatar">⚔️</div>
+          <div class="hq-profile-copy">
+            <div class="hq-char-class" id="hq-class">Adventurer · Level 1</div>
+            <div class="hq-char-name" id="hq-name">Hero</div>
+            <div class="hq-profile-line" id="hq-profile-line">4 training days · Calisthenics</div>
+          </div>
+        </div>
       </div>
-      <div class="hq-stats-row">
-        <div class="hq-stat"><div class="hq-stat-val" style="color:var(--hp)" id="hq-str">--</div><div class="hq-stat-label">STR</div></div>
-        <div class="hq-stat"><div class="hq-stat-val" style="color:var(--mana)" id="hq-agi">--</div><div class="hq-stat-label">AGI</div></div>
-        <div class="hq-stat"><div class="hq-stat-val" style="color:var(--xp)" id="hq-vit">--</div><div class="hq-stat-label">VIT</div></div>
-        <div class="hq-stat"><div class="hq-stat-val" style="color:var(--gold)" id="hq-lvl">1</div><div class="hq-stat-label">LVL</div></div>
+      <div class="status-bars">
+        <div class="status-bar-row">
+          <div class="sb-label" style="color:var(--xp)">XP</div>
+          <div class="sb-track"><div class="sb-fill xp-fill-bar" id="xp-bar" style="width:0%"></div></div>
+          <div class="sb-val" style="color:var(--xp)" id="xp-val">0/100</div>
+        </div>
+        <div class="status-bar-row">
+          <div class="sb-label" style="color:var(--purple)">Steps</div>
+          <div class="sb-track"><div class="sb-fill" id="agi-bar" style="width:0%;background:linear-gradient(90deg,#7c3aed,var(--purple))"></div></div>
+          <div class="sb-val" style="color:var(--purple)" id="agi-val">0 / 10k</div>
+        </div>
+        <div class="status-bar-row">
+          <div class="sb-label" style="color:var(--gold)">Meals</div>
+          <div class="sb-track"><div class="sb-fill" id="cals-bar" style="width:0%;background:linear-gradient(90deg,#e0a820,var(--gold))"></div></div>
+          <div class="sb-val" style="color:var(--gold)" id="cals-bar-val">0 / -- kcal</div>
+        </div>
       </div>
-    </div>
-  </div>
-  <div class="status-bars">
-    <div class="status-bar-row">
-      <div class="sb-label" style="color:var(--xp)">XP</div>
-      <div class="sb-track"><div class="sb-fill xp-fill-bar" id="xp-bar" style="width:0%"></div></div>
-      <div class="sb-val" style="color:var(--xp)" id="xp-val">0/100</div>
-    </div>
-    <div class="status-bar-row">
-      <div class="sb-label" style="color:var(--purple)">Steps</div>
-      <div class="sb-track"><div class="sb-fill" id="agi-bar" style="width:0%;background:linear-gradient(90deg,#7c3aed,var(--purple))"></div></div>
-      <div class="sb-val" style="color:var(--purple)" id="agi-val">0 / 10k</div>
-    </div>
-    <div class="status-bar-row">
-      <div class="sb-label" style="color:var(--gold)">Meals</div>
-      <div class="sb-track"><div class="sb-fill" id="cals-bar" style="width:0%;background:linear-gradient(90deg,#e0a820,var(--gold))"></div></div>
-      <div class="sb-val" style="color:var(--gold)" id="cals-bar-val">0 / -- kcal</div>
     </div>
   </div>
 
   <div class="content-area">
-    <!-- Daily Quests -->
     <div class="section-header">
       <div class="section-title">Daily Quests</div>
       <div class="section-link" onclick="go('plan')">All quests →</div>
     </div>
     <div class="quests-grid" id="daily-quests"></div>
 
-    <!-- Stat tiles -->
     <div class="section-header">
       <div class="section-title">Today's Progress</div>
       <div class="section-link" onclick="openModal()">Log stats +</div>
     </div>
     <div class="stats-row-4">
-      <!-- Steps: live from pedometer -->
       <div class="stat-tile" id="tile-steps">
         <div class="st-icon">👟</div>
         <div class="st-val" id="st-steps">0</div>
@@ -196,7 +245,6 @@
         <div class="st-label">Steps</div>
         <div class="st-bar"><div class="st-bar-fill" id="stb-steps" style="width:0%;background:var(--purple)"></div></div>
       </div>
-      <!-- Calories burned: estimated from steps + profile -->
       <div class="stat-tile">
         <div class="st-icon">🔥</div>
         <div class="st-val" id="st-cals-burned">0</div>
@@ -204,7 +252,6 @@
         <div class="st-label">Cal. Burned</div>
         <div class="st-bar"><div class="st-bar-fill" id="stb-cals-burned" style="width:0%;background:var(--orange)"></div></div>
       </div>
-      <!-- Calories eaten: manual log -->
       <div class="stat-tile" onclick="tapStat(this,'cals')">
         <div class="st-icon">🍽️</div>
         <div class="st-val" id="st-cals">0</div>
@@ -212,8 +259,7 @@
         <div class="st-label">Cal. Eaten</div>
         <div class="st-bar"><div class="st-bar-fill" id="stb-cals" style="width:0%;background:var(--gold)"></div></div>
       </div>
-      <!-- Workouts: manual tap -->
-      <div class="stat-tile" onclick="tapStat(this,'wo')">
+      <div class="stat-tile">
         <div class="st-icon">⚔️</div>
         <div class="st-val" id="st-wo">0</div>
         <div class="st-unit" id="st-wo-label">workouts</div>
@@ -222,32 +268,39 @@
       </div>
     </div>
 
-    <!-- Workouts + Quick Log -->
     <div class="two-col-grid">
       <div class="game-panel">
         <div class="panel-title">Today's Training</div>
+        <div id="hq-equip-badge"></div>
         <div id="hq-workouts">
           <div class="empty-state"><div class="empty-icon">⚔️</div><div class="empty-text">Complete character setup to unlock today's training quests.</div></div>
         </div>
       </div>
-      <div class="game-panel">
-        <div class="panel-title">Quick Actions</div>
-        <div class="action-btns">
-          <button class="action-btn" onclick="tapStat(null,'wo')">⚔️ Workout Done</button>
-          <button class="action-btn" onclick="openModal()">⚖️ Log Weight</button>
+      <div class="game-panel hq-guild-panel">
+        <div class="panel-title">Guild Affiliation</div>
+        <div class="hq-guild-card">
+          <div class="hq-guild-status" id="hq-guild-status">Independent</div>
+          <div class="hq-guild-name" id="hq-guild-name">No active guild selected</div>
+          <div class="hq-guild-meta" id="hq-guild-meta">Choose a guild or keep training independently in your current environment.</div>
         </div>
-        <div id="steps-sensor-note" style="font-size:0.72rem;color:var(--muted2);margin:10px 0 6px;line-height:1.5;padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)">
-          👟 <strong style="color:var(--text)">Step tracking</strong> uses your device's motion sensor. <span id="sensor-status-note">Requesting permission…</span>
+        <div class="hq-guild-tags" id="hq-guild-tags"></div>
+        <div class="hq-guild-actions">
+          <button class="guild-panel-btn" id="hq-guild-manage-btn" onclick="go('guild')">Choose Guild</button>
         </div>
-        <div class="food-entry-row">
-          <input class="food-input-game" type="text" id="food-input" placeholder="Log a meal…" onkeydown="if(event.key==='Enter')logFood()">
-          <button class="food-add-btn" onclick="logFood()">+XP</button>
-        </div>
-        <div id="food-log" class="food-logged"></div>
       </div>
     </div>
 
-    <!-- Achievements -->
+    <div class="game-panel hq-support-panel">
+      <div id="steps-sensor-note" style="font-size:0.72rem;color:var(--muted2);margin:0 0 10px;line-height:1.5;padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)">
+        👟 <strong style="color:var(--text)">Step tracking</strong> uses your device's motion sensor. <span id="sensor-status-note">Requesting permission…</span>
+      </div>
+      <div class="food-entry-row">
+        <input class="food-input-game" type="text" id="food-input" placeholder="Log a meal…" onkeydown="if(event.key==='Enter')logFood()">
+        <button class="food-add-btn" onclick="logFood()">+XP</button>
+      </div>
+      <div id="food-log" class="food-logged"></div>
+    </div>
+
     <div class="section-header" style="margin-top:8px">
       <div class="section-title">Achievements</div>
     </div>
@@ -264,7 +317,6 @@
     </div>
     <div class="plan-week-row" id="plan-week"></div>
 
-    <!-- Rest Day / Busy Mode Banner -->
     <div id="rest-day-banner" style="display:none;margin-bottom:16px">
       <div style="background:linear-gradient(135deg,#1d2235,#161928);border:1.5px solid var(--purple);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="font-size:1.5rem">😮‍💨</div>
@@ -278,14 +330,15 @@
 
     <div class="plan-content-grid">
       <div class="game-panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div class="panel-title" style="margin:0">Today's Training</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="panel-title" id="plan-training-title" style="margin:0">Today's Training</div>
           <button id="cant-do-btn" onclick="showCantDoModal()" style="font-size:0.7rem;color:var(--muted2);background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.05em;transition:all 0.2s" onmouseover="this.style.borderColor='var(--purple)';this.style.color='var(--purple)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted2)'">Can't do it today?</button>
         </div>
+        <div id="plan-equip-badge"></div>
+        <div id="plan-env-picker" class="plan-env-picker" style="display:none"></div>
         <div id="plan-exercises">
           <div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">Create your hero to unlock your training plan.</div></div>
         </div>
-        <!-- Micro-habits (shown on rest day) -->
         <div id="micro-habits" style="display:none">
           <div style="font-size:0.72rem;color:var(--purple);font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.08em;margin-bottom:10px">⚡ MICRO-HABITS FOR TODAY</div>
           <div id="micro-habit-list"></div>
@@ -294,6 +347,7 @@
 
       <div class="game-panel" id="nutrition-panel">
         <div class="panel-title">Nutrition Quests</div>
+        <div id="macro-summary" class="macro-summary"></div>
         <div id="plan-meals">
           <div class="nutrition-unlock-state">
             <div class="nu-icon">🥗</div>
@@ -313,22 +367,20 @@
         <div id="plan-meals-reset" style="display:none;margin-top:12px">
           <button onclick="resetNutritionPlan()" style="font-size:0.72rem;color:var(--muted2);background:none;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.06em;text-transform:uppercase">↺ Change food availability</button>
         </div>
-        <!-- Hydration Tip -->
         <div style="margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,#60a5fa10,#60a5fa05);border:1px solid #60a5fa30;border-radius:10px;display:flex;gap:10px;align-items:flex-start">
           <div style="font-size:1.1rem">💧</div>
           <div>
             <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.72rem;color:var(--mana);letter-spacing:0.08em;text-transform:uppercase">Hydration Tip</div>
-            <div style="font-size:0.75rem;color:var(--muted2);margin-top:3px;line-height:1.6" id="hydration-tip-text">Drink a glass of water before each meal — it helps with portion control and keeps energy stable throughout the day.</div>
+            <div style="font-size:0.75rem;color:var(--muted2);margin-top:3px;line-height:1.6" id="hydration-tip-text">Drink a glass of water before each meal.</div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
 <!-- ══ CAN'T DO IT MODAL ══ -->
-<div class="modal-bg" id="cant-do-bg" onclick="if(event.target===this)closeCantDoModal()">
+<div class="modal-bg" id="cant-do-bg" onclick="if(event.target===this)closeCantDoModal()" style="display:none">
   <div class="modal-card" style="max-width:420px">
     <div class="modal-title">😮‍💨 Can't Train Today?</div>
     <p style="font-size:0.8rem;color:var(--muted2);margin-bottom:18px;line-height:1.65">No problem — life happens. Choose what's going on and we'll swap your training for micro-habits you can actually do.</p>
@@ -341,6 +393,156 @@
       <button class="rest-reason-btn" onclick="activateRestDay('rest_day')">🧘 Scheduled rest day</button>
     </div>
     <button onclick="closeCantDoModal()" style="width:100%;padding:11px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted2);font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;letter-spacing:0.06em">Never mind, I'll train today</button>
+  </div>
+</div>
+
+<!-- ══════════════ SCHEDULE ══════════════ -->
+<div id="screen-schedule" class="screen">
+  <div class="content-area">
+    <div class="section-header">
+      <div class="section-title">📅 My Planner</div>
+      <div class="section-link" onclick="analyseSchedule()">Analyse →</div>
+    </div>
+    <p style="font-size:0.82rem;color:var(--muted2);line-height:1.65;margin-bottom:20px">Upload a photo of your weekly planner or timetable and local OCR will detect your busy windows. Or build it manually below.</p>
+
+    <div class="planner-workspace">
+      <div class="schedule-layout">
+        <div class="game-panel">
+          <div class="panel-title">Manual Planner Builder</div>
+          <div style="font-size:0.72rem;color:var(--muted2);line-height:1.5;margin-bottom:10px">Start with an empty week, then add your classes/events as time blocks.</div>
+          <div class="sched-legend" style="margin-bottom:10px">
+            <div class="sched-leg-item"><div class="sched-leg-dot" style="background:var(--hp)"></div>Busy</div>
+            <div class="sched-leg-item"><div class="sched-leg-dot" style="background:var(--gold)"></div>Workout</div>
+            <div class="sched-leg-item"><div class="sched-leg-dot" style="background:var(--xp)"></div>Free</div>
+            <div class="sched-leg-item" onclick="openSchedScanModal()" style="margin-left:auto"><div class="sched-leg-dot" style="background:var(--mana)"></div>Upload Photo</div>
+          </div>
+          <div class="sched-visual-shell">
+            <div id="sched-visual-hours" class="sched-visual-hours"></div>
+            <div id="sched-visual-board" class="sched-visual-board"></div>
+          </div>
+
+        </div>
+
+        <div class="game-panel sched-side-editor">
+          <div class="panel-title">Add Your Schedule</div>
+
+          <!-- Class name -->
+          <input id="sc-name" class="sc-name-input" type="text" placeholder="Schedule or time name (e.g. Lecture, Work)">
+
+          <!-- Day toggles -->
+          <div class="sc-section-label">Days</div>
+          <div class="sc-day-row">
+            <button class="sc-day-btn" data-day="Sun" onclick="toggleSchedDay(this)">S</button>
+            <button class="sc-day-btn" data-day="Mon" onclick="toggleSchedDay(this)">M</button>
+            <button class="sc-day-btn" data-day="Tue" onclick="toggleSchedDay(this)">T</button>
+            <button class="sc-day-btn" data-day="Wed" onclick="toggleSchedDay(this)">W</button>
+            <button class="sc-day-btn" data-day="Thu" onclick="toggleSchedDay(this)">T</button>
+            <button class="sc-day-btn" data-day="Fri" onclick="toggleSchedDay(this)">F</button>
+            <button class="sc-day-btn" data-day="Sat" onclick="toggleSchedDay(this)">S</button>
+          </div>
+
+          <!-- Time slots (populated by JS) -->
+          <div class="sc-section-label">Time</div>
+          <div id="sc-time-slots"></div>
+          <button class="sc-add-time-btn" onclick="addSchedTimeRow()">+ Add another time</button>
+
+          <!-- Notes -->
+          <input id="sched-entry-note" class="sc-name-input" type="text" placeholder="Notes (optional)" style="margin-top:6px">
+
+          <!-- Actions -->
+          <div class="sc-actions">
+            <button class="sc-add-class-btn" onclick="addScheduleEntryFromControls()">Add Schedule</button>
+            <button class="sc-hide-btn" onclick="clearSchedForm()">Clear</button>
+          </div>
+
+          <!-- Entry list -->
+          <div id="sched-entry-list" class="planner-list" style="margin-top:14px;margin-bottom:0">
+            <div class="planner-empty">No schedule entries yet. Add your schedule above.</div>
+          </div>
+
+          <!-- Analysis & save -->
+          <div id="sched-analysis" class="sched-analysis" style="display:none;margin-top:14px"></div>
+          <button onclick="saveManualSchedule()" style="width:100%;margin-top:12px;padding:11px;background:linear-gradient(135deg,var(--gold),#e0a820);border:none;border-radius:10px;color:#0d0f1a;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.08em;cursor:pointer">📅 Save Planner</button>
+        </div>
+      </div>
+
+      <div class="game-panel planner-month-panel">
+        <div class="panel-title">Monthly Planner</div>
+        <div class="planner-month-shell">
+          <div>
+            <div class="planner-month-header">
+              <button class="planner-btn" onclick="setPlannerMonth(-1)">◂</button>
+              <div id="planner-month-label" class="planner-month-label">Month YYYY</div>
+              <button class="planner-btn" onclick="setPlannerMonth(1)">▸</button>
+            </div>
+            <div class="planner-weekdays">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div id="planner-month-grid" class="planner-month-grid"></div>
+            <div class="planner-legend">
+              <span class="planner-pill busy">Busy</span>
+              <span class="planner-pill exam">Exam</span>
+              <span class="planner-pill workout">Workout</span>
+              <span class="planner-pill rest">Rest Day</span>
+              <span class="planner-pill renewal">Membership Renewal</span>
+              <span class="planner-pill holiday">Holiday</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHEDULE SCAN MODAL ══ -->
+<div class="modal-bg" id="sched-scan-modal" onclick="if(event.target===this)closeSchedScanModal()" style="display:none">
+  <div class="modal-card" style="max-width:620px">
+    <div class="modal-title" style="margin-bottom:12px">📸 Scan Your Planner</div>
+    <div style="font-size:0.76rem;color:var(--muted2);line-height:1.6;margin-bottom:12px">Upload a planner or timetable image. We'll extract busy windows and apply them to your manual planner.</div>
+    <div class="sched-scan-zone" id="sched-scan-zone" onclick="document.getElementById('sched-file').click()"
+      ondrop="onSchedDrop(event)" ondragover="onSchedDragOver(event)" ondragleave="onSchedDragLeave(event)">
+      <input type="file" id="sched-file" accept="image/*" style="display:none" onchange="onSchedFileChange(event)">
+      <div id="sched-scan-content">
+        <div style="font-size:2.5rem;margin-bottom:12px">📸</div>
+        <div style="font-family:'Orbitron',monospace;font-size:0.78rem;font-weight:700;color:var(--text);margin-bottom:8px">Upload Planner Photo</div>
+        <div style="font-size:0.78rem;color:var(--muted2);line-height:1.6;margin-bottom:16px">Photograph your class timetable, work calendar, or weekly planner. AI scan runs when available, otherwise it falls back to local OCR.</div>
+        <button class="scan-btn" style="background:linear-gradient(135deg,var(--purple),#7c3aed)" onclick="event.stopPropagation();document.getElementById('sched-file').click()">Upload Photo</button>
+      </div>
+      <img id="sched-preview" class="sched-preview">
+    </div>
+    <div id="sched-ai-result" style="display:none;margin-top:12px"></div>
+    <div style="margin-top:12px;display:flex;justify-content:flex-end">
+      <button class="planner-btn" onclick="closeSchedScanModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ GUILD / GYM FINDER ══════════════ -->
+<div id="screen-guild" class="screen">
+  <div class="content-area">
+    <div class="section-header">
+      <div class="section-title">🏛️ Find Your Guild</div>
+    </div>
+    <p style="font-size:0.82rem;color:var(--muted2);line-height:1.65;margin-bottom:20px">Discover gyms near you, compare them on map, and pick the one that fits your quest.</p>
+
+    <!-- Gym finder -->
+    <div class="game-panel">
+      <div class="panel-title">Nearby Gyms</div>
+      <button class="gym-locate-btn" id="locate-btn" onclick="findNearbyGyms()">
+        📍 Find Gyms Near Me
+      </button>
+      <div id="gym-status" style="font-size:0.78rem;color:var(--muted2);margin-bottom:12px;display:none"></div>
+      <div id="gym-search-wrap" style="display:none;margin-bottom:14px">
+        <input id="gym-search" type="text" placeholder="🔍  Filter gyms by name or address…" oninput="filterGyms(this.value)" autocomplete="off">
+      </div>
+      <div id="gym-map" style="display:none"></div>
+      <div id="gym-route-info" class="gym-route-info" style="display:none"></div>
+      <div class="gym-cards-grid" id="gym-cards">
+        <div style="grid-column:1/-1">
+          <div class="empty-state"><div class="empty-icon">🗺️</div><div class="empty-text">Tap the button above to search for gyms near your location.</div></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -359,7 +561,7 @@
             <div class="scan-icon">📸</div>
             <div class="scan-title">Scan Ingredients</div>
             <div class="scan-sub">Photograph your fridge or pantry. Our AI identifies what you have and crafts recipes just for you.</div>
-            <button class="scan-btn" onclick="event.stopPropagation()">Upload Photo</button>
+            <button class="scan-btn" onclick="event.stopPropagation();document.getElementById('scan-file').click()">Upload Photo</button>
           </div>
           <img id="scan-preview" class="food-img-preview">
         </div>
@@ -389,15 +591,12 @@
   </div>
 </div>
 
-<!-- ══ MODAL ══ -->
-
 <!-- ══════════════ SAGE ADVISOR ══════════════ -->
 <div id="screen-sage" class="screen">
   <div class="content-area" style="max-width:760px">
     <div class="section-header">
       <div class="section-title">🧙 Sage Advisor</div>
     </div>
-
     <div class="coach-game-panel" style="margin-bottom:16px">
       <div class="coach-panel-header">
         <div class="coach-avatar">🧙</div>
@@ -410,26 +609,76 @@
         </div>
       </div>
       <div class="coach-msgs" id="coach-msgs" style="max-height:400px">
-        <div class="coach-bubble bot">Greetings, hero! I'm your Sage Advisor — I know your class, your goals, and your progress. Ask me anything: training advice, what to eat, how to recover, or just vent about skipping leg day. I'm here.</div>
+        <div class="coach-bubble bot">Greetings, hero! I'm your Sage Advisor — I know your class, your goals, and your training setup. Ask me anything: workouts, nutrition, recovery, or just how to stay consistent. I'm here.</div>
       </div>
       <div class="coach-input-area">
         <input class="coach-game-input" id="coach-input" placeholder="Ask the Sage anything…" onkeydown="if(event.key==='Enter')sendCoach()">
         <button class="coach-game-send" onclick="sendCoach()">Send ▸</button>
       </div>
     </div>
-
     <div class="game-panel">
       <div class="panel-title">Quick Questions</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px" id="quick-topics">
-        <button class="ctopic-card" onclick="askCoach('What are the best exercises for my specific goal?')">💪 Best exercises for my goal</button>
+        <button class="ctopic-card" onclick="askCoach('What are the best exercises for my specific goal and equipment?')">💪 Best exercises for me</button>
         <button class="ctopic-card" onclick="askCoach('What should I eat after working out to maximize recovery?')">🥗 Post-workout nutrition</button>
         <button class="ctopic-card" onclick="askCoach('How do I stay consistent and motivated when I don\'t feel like training?')">🔥 Staying motivated</button>
         <button class="ctopic-card" onclick="askCoach('How much protein do I actually need daily based on my weight and goal?')">🥩 My protein needs</button>
         <button class="ctopic-card" onclick="askCoach('How do I recover faster between training sessions?')">😴 Recovery tips</button>
-        <button class="ctopic-card" onclick="askCoach('What are common mistakes people make when trying to reach my goal?')">⚠️ Common mistakes to avoid</button>
+        <button class="ctopic-card" onclick="askCoach('What are common mistakes people make when trying to reach my goal?')">⚠️ Common mistakes</button>
         <button class="ctopic-card" onclick="askCoach('Can you give me a weekly habit checklist based on my goals?')">📋 Weekly habit checklist</button>
         <button class="ctopic-card" onclick="askCoach('I feel like I\'m not progressing. What should I do?')">📉 Not seeing progress</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADVENTURE MODE ══════════════ -->
+<div id="screen-adventure" class="screen">
+  <div class="content-area">
+    <div class="section-header">
+      <div class="section-title">⚔️ Adventure Mode</div>
+      <div id="adv-date-chip" style="font-family:'Orbitron',monospace;font-size:0.6rem;font-weight:700;color:var(--muted2);letter-spacing:0.08em"></div>
+    </div>
+
+    <!-- Quest Builder -->
+    <div class="game-panel" style="margin-bottom:16px">
+      <div class="panel-title">📝 Build Today's Quest</div>
+
+      <div class="sc-section-label">Day Type</div>
+      <div class="adv-day-type-row" id="adv-day-type-row">
+        <button class="adv-day-btn active" data-type="push"      onclick="setAdvDayType(this,'push')">💪 Push</button>
+        <button class="adv-day-btn"        data-type="pull"      onclick="setAdvDayType(this,'pull')">🔙 Pull</button>
+        <button class="adv-day-btn"        data-type="legs"      onclick="setAdvDayType(this,'legs')">🦵 Legs</button>
+        <button class="adv-day-btn"        data-type="upper"     onclick="setAdvDayType(this,'upper')">🏋️ Upper</button>
+        <button class="adv-day-btn"        data-type="lower"     onclick="setAdvDayType(this,'lower')">🏃 Lower</button>
+        <button class="adv-day-btn"        data-type="full_body" onclick="setAdvDayType(this,'full_body')">⚡ Full Body</button>
+        <button class="adv-day-btn"        data-type="cardio"    onclick="setAdvDayType(this,'cardio')">💨 Cardio</button>
+        <button class="adv-day-btn"        data-type="custom"    onclick="setAdvDayType(this,'custom')">✨ Custom</button>
+      </div>
+
+      <div class="sc-section-label" style="margin-top:14px">Quest Name</div>
+      <input class="sc-name-input" type="text" id="adv-quest-name" placeholder="e.g. Push Day — Chest &amp; Shoulders">
+
+      <div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="sc-section-label" style="margin:0">Exercises</div>
+        <div style="font-size:0.68rem;color:var(--muted2)">Sets &nbsp;×&nbsp; Reps &nbsp;@&nbsp; Weight</div>
+      </div>
+      <div id="adv-exercise-list" style="display:grid;gap:8px"></div>
+      <button class="sc-add-time-btn" style="width:100%;margin-top:8px" onclick="addAdvExercise()">+ Add Exercise</button>
+
+      <div class="sc-section-label" style="margin-top:14px">Notes (optional)</div>
+      <input class="sc-name-input" type="text" id="adv-notes" placeholder="PRs hit, how you felt, what to improve...">
+
+      <div class="sc-actions" style="margin-top:16px">
+        <button class="adv-complete-btn" onclick="completeAdvQuest()">⚔️ Complete Quest</button>
+        <button class="sc-hide-btn" onclick="clearAdvForm()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Quest Log -->
+    <div class="game-panel">
+      <div class="panel-title">📖 Quest Log</div>
+      <div id="adv-quest-log"><div class="planner-empty">No quests completed yet. Build and complete your first quest above!</div></div>
     </div>
   </div>
 </div>
@@ -450,9 +699,35 @@
         <div class="form-group"><label class="form-label">Height (cm)</label><input class="form-input" type="number" id="s-height" placeholder="165"></div>
         <div class="form-group"><label class="form-label">Gender</label><select class="form-input" id="s-gender"><option value="">Select...</option><option>Female</option><option>Male</option><option>Other</option></select></div>
       </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label class="form-label">Country (for holidays)</label><select class="form-input" id="s-country"></select></div>
+        <div class="form-group"></div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Current Weight (kg)</label><input class="form-input" type="number" id="s-weight" placeholder="65"></div>
         <div class="form-group"><label class="form-label">Target Weight (kg)</label><input class="form-input" type="number" id="s-target" placeholder="58"></div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label class="form-label">Body Type</label>
+          <select class="form-input" id="s-body-type">
+            <option value="skinny">Skinny</option>
+            <option value="skinny_fat">Skinny Fat</option>
+            <option value="average">Average</option>
+            <option value="athletic">Athletic / Lean</option>
+            <option value="overweight">Fat / Overweight</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Physique Phase</label>
+          <select class="form-input" id="s-phase">
+            <option value="auto">Auto (recommended)</option>
+            <option value="cutting">Cutting</option>
+            <option value="lean_bulk">Lean Bulk</option>
+            <option value="bulking">Bulk</option>
+            <option value="recomp">Recomp / Maintain</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="game-panel" style="margin-bottom:16px">
@@ -476,16 +751,94 @@
           </select>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Activity Level</label>
-        <select class="form-input" id="s-activity">
-          <option value="sedentary">Sedentary — Desk job, little movement</option>
-          <option value="light">Lightly Active — 1-3 days/week</option>
-          <option value="moderate">Moderately Active — 3-5 days/week</option>
-          <option value="very_active">Very Active — Hard training most days</option>
-        </select>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">Pattern Mode</label>
+          <select class="form-input" id="s-pattern-mode">
+            <option value="flexible">Soft (recommended)</option>
+            <option value="strict">Hard (strict routine)</option>
+          </select>
+          <div style="font-size:0.72rem;color:var(--muted2);margin-top:6px;line-height:1.5">Soft adapts to schedule pressure and picks efficient slots. Hard keeps a more routine-based cadence and aligns session times when possible.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Muscle Split</label>
+          <select class="form-input" id="s-build-muscle-split">
+            <option value="classic">Classic 5-Day (Chest/Back/Legs/Shoulders/Arms)</option>
+            <option value="ppl">Push Pull Legs (PPL)</option>
+            <option value="upper_lower">Upper Lower</option>
+            <option value="arnold">Arnold Split</option>
+          </select>
+          <div style="font-size:0.72rem;color:var(--muted2);margin-top:6px;line-height:1.5">Mainly affects Build Muscle quest/day structure and training focus selection.</div>
+        </div>
       </div>
-    </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Activity Level</label>
+          <select class="form-input" id="s-activity">
+            <option value="sedentary">Sedentary — Desk job, little movement</option>
+            <option value="light">Lightly Active — 1-3 days/week</option>
+            <option value="moderate">Moderately Active — 3-5 days/week</option>
+            <option value="very_active">Very Active — Hard training most days</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Training Equipment</label>
+          <select class="form-input" id="s-equipment">
+            <option value="full_gym">🏋️ Full Gym</option>
+            <option value="minimal_gym">🪁 Minimal / Hotel Gym</option>
+            <option value="home_equipped">🏠 Home (Equipped)</option>
+            <option value="calisthenics">🤸 Calisthenics / Bodyweight</option>
+            <option value="outdoor">🌳 Outdoor / Parks</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label class="form-label">Calisthenics Experience</label>
+          <select class="form-input" id="s-calisthenics-level">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Training Time</label>
+          <select class="form-input" id="s-session-minutes">
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+            <option value="75">75 min</option>
+            <option value="90">90 min</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label class="form-label">Preferred Training Window</label>
+          <select class="form-input" id="s-training-window">
+            <option value="early">Early Bird</option>
+            <option value="midday">Midday</option>
+            <option value="evening">Evening</option>
+            <option value="night">Night</option>
+            <option value="flexible">Flexible</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="s-auto-window"> Hidden Beta: Auto-pick training window from Planner schedule</label>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;line-height:1.5">Keeps your manual preference as backup, but adapts daily when schedule data exists.</div>
+        </div>
+      </div>      <div class="form-row" style="margin-top:14px">
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="s-adventure-mode">
+            <span>⚔️ Adventure Mode</span>
+          </label>
+          <div style="font-size:0.72rem;color:var(--muted2);margin-top:6px;line-height:1.6">For experienced gym-goers. Plan your own quests, set your day type (Push / Pull / Legs / etc.), log exercises with sets, reps, and weight, and build your personal quest log. Unlocks the Adventure tab in the nav.</div>
+        </div>
+      </div>    </div>
     <div class="game-panel" style="margin-bottom:24px">
       <div class="panel-title">Nutrition Path</div>
       <div class="form-group">
@@ -500,7 +853,7 @@
         </select>
       </div>
     </div>
-    <button class="btn-forward" style="width:100%;justify-content:center" onclick="saveSettings()">Save Changes</button>
+    <button class="btn-forward" style="width:100%;justify-content:center" onclick="saveSettings()">💾 Save Changes</button>
     <div class="game-panel" style="margin-top:20px;border-color:#f8717140">
       <div class="panel-title" style="color:var(--hp)">Danger Zone</div>
       <p style="font-size:0.8rem;color:var(--muted2);margin-bottom:14px;line-height:1.6">Resetting your hero will erase all progress, XP, and stats. This cannot be undone.</p>
@@ -509,6 +862,7 @@
   </div>
 </div>
 
+<!-- ══ STATS MODAL ══ -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal-card">
     <div class="modal-title">⚔️ Log Today's Progress</div>
@@ -517,8 +871,8 @@
       <div class="form-group"><label class="form-label">Calories eaten</label><input class="form-input" type="number" id="m-cals" placeholder="500"></div>
     </div>
     <div style="font-size:0.75rem;color:var(--muted2);margin-bottom:8px;padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid var(--border);line-height:1.6">
-      👟 Steps are tracked automatically via your device sensor.<br>
-      🔥 Calories burned are estimated from your steps + weight.
+      👟 Steps tracked automatically via device sensor.<br>
+      🔥 Calories burned estimated from steps + weight.
     </div>
     <div class="modal-actions">
       <button class="mbtn-cancel" onclick="closeModal()">Cancel</button>
@@ -527,9 +881,67 @@
   </div>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+<div class="modal-bg" id="planner-date-modal" onclick="if(event.target===this)closePlannerDateModal()">
+  <div class="modal-card planner-date-modal-card">
+    <div class="modal-title">📆 Manage Date</div>
+    <div id="planner-modal-selected-date" class="planner-selected-date">Selected date</div>
+    <div class="planner-form-row">
+      <select id="planner-event-type" class="planner-input">
+        <option value="busy">Busy</option>
+        <option value="exam">Exam</option>
+        <option value="workout">Workout</option>
+        <option value="rest_day">Rest Day</option>
+        <option value="membership_renewal">Membership Renewal</option>
+        <option value="free">Free</option>
+      </select>
+    </div>
+    <div class="planner-form-row">
+      <input id="planner-event-note" class="planner-input" type="text" placeholder="Exam, trip, gym renewal, family day...">
+      <button class="planner-btn" onclick="addPlannerDateEvent()">Add</button>
+    </div>
+    <div id="planner-modal-date-list" class="planner-list"></div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="mbtn-cancel" onclick="closePlannerDateModal()">Close</button>
+    </div>
+  </div>
+</div>
 
+<!-- ══ FLOATING SAGE CHAT ══ -->
+<button class="sage-fab" id="sage-fab" onclick="toggleSageChat()" aria-label="Open Sage chat" title="Chat with Sage">
+  <span class="sage-fab-text">Sage</span>
+</button>
+
+<div class="sage-chat-backdrop" id="sage-chat-backdrop" onclick="closeSageChat()"></div>
+
+<div class="sage-chat-panel" id="sage-chat-panel" aria-hidden="true">
+  <div class="sage-chat-header">
+    <div class="sage-chat-title-wrap">
+      <div class="coach-avatar" style="width:34px;height:34px;font-size:0.95rem">🧙</div>
+      <div>
+        <div class="sage-chat-title">Sage Advisor</div>
+        <div class="sage-chat-status">Online</div>
+      </div>
+    </div>
+    <button class="sage-chat-close" onclick="closeSageChat()" aria-label="Close Sage chat">✕</button>
+  </div>
+
+  <div class="coach-msgs" id="coach-msgs-float">
+    <div class="coach-bubble bot">Greetings, hero! I am your Sage. Ask me about training, nutrition, or recovery and I will guide your next move.</div>
+  </div>
+
+  <div class="sage-quick-row">
+    <button class="sage-quick-btn" onclick="askCoach('Give me a focused workout plan for today based on my profile.', 'float')">Workout</button>
+    <button class="sage-quick-btn" onclick="askCoach('What should I eat today to stay on track?', 'float')">Nutrition</button>
+    <button class="sage-quick-btn" onclick="askCoach('How can I recover better after training?', 'float')">Recovery</button>
+  </div>
+
+  <div class="coach-input-area">
+    <input class="coach-game-input" id="coach-input-float" placeholder="Ask the Sage..." onkeydown="if(event.key==='Enter')sendCoach('float')">
+    <button class="coach-game-send" onclick="sendCoach('float')">Send ▸</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 <script src="vitalquest.js"></script>
 </body>
 </html>

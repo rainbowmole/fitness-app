@@ -1,0 +1,22 @@
+# Local secrets
+.env
+.env.local
+
+# OS/editor
+.DS_Store
+Thumbs.db
+
+# Flutter development (in progress)
+flutter-app/
+
+# Archive and cleanup folders
+archive/
+web-cleanup/
+
+# IDE
+.vscode/
+
+# Python
+paddle_ocr_server.py
+__pycache__/
+*.pyc
